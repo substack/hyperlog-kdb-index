@@ -17,42 +17,26 @@ function HKDB (opts) {
   self.kdb = opts.kdb
 
   self.dex = indexer(self.log, self.db, function (row, next) {
-    if (!row.value.v.loc) return next()
-    var pt = row.value.v.loc[0]
+    var pt = opts.map(row)
+    if (!pt) return next()
     var value = Buffer(row.key, 'hex')
-    self.kdb.insert(pt, value, next)
+    var links = {}
+    row.links.forEach(function (link) { links[link] = true })
+
+    self.kdb.remove(pt, {
+      filter: function (pt) {
+        return links.hasOwnProperty(pt.value.toString('hex'))
+      }
+    }, onremove)
+    function onremove (err) {
+      if (err) next(err)
+      else self.kdb.insert(pt, value, next)
+    }
   })
 }
 
-/*
-HKDB.prototype.insert = function (pt, value, opts, cb) {
-  var self = this
-  if (typeof opts === 'function') {
-    cb = opts
-    opts = {}
-  }
-  if (!opts) opts = {}
-  cb = once(cb || noop)
-
-  var doc = { point: pt, value: value }
-  if (opts.links) {
-    self.log.add(opts.links, doc, cb)
-  } else {
-    self.dex.ready(function () {
-      if (err) return cb(err)
-      self.log.add(links, doc, function (err, node) {
-        if (err) return cb(err)
-      })
-    })
-  }
-}
-*/
-
-HKDB.prototype.query = function () {
-  var self = this
-  self.dex.ready(function () {
-    //...
-  })
+HKDB.prototype.ready = function (fn) {
+  this.dex.ready(fn)
 }
 
 function noop () {}
