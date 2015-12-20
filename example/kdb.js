@@ -3,7 +3,7 @@ var fdstore = require('fd-chunk-store')
 var randomBytes = require('randombytes')
 
 var kdb = kdbtree({
-  types: [ 'float', 'float', 'float', 'buffer[16]' ],
+  types: [ 'float', 'float', 'float', 'buffer[32]' ],
   size: 1024,
   store: fdstore(1024, '/tmp/kdb-tree')
 })
