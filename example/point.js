@@ -3,9 +3,9 @@ var fdstore = require('fd-chunk-store')
 var randomBytes = require('randombytes')
 
 var kdb = kdbtree({
-  types: [ 'float', 'float', 'float', 'buffer[32]' ],
+  types: [ 'float', 'float', 'buffer[32]' ],
   size: 1024,
-  store: fdstore(1024, '/tmp/kdb-tree')
+  store: fdstore(1024, '/tmp/kdb-tree-' + Math.random())
 })
 var hyperkdb = require('../')
 var logdb = require('memdb')()
@@ -34,8 +34,10 @@ for (var i = 0; i < 50; i++) {
 }
 
 h.ready(function () {
-  kdb.query([[64.5,65],[-147.2,-147.6]], function (err, pts) {
-    if (err) console.error(err)
-    else console.log(pts)
+  kdb.query([[64.5,65],[-147.9,-147.2]], function (err, pts) {
+    if (err) return console.error(err)
+    pts.forEach(function (pt) {
+      console.log(pt.point)
+    })
   })
 })
