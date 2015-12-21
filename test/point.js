@@ -10,14 +10,15 @@ var log = hyperlog(memdb(), { valueEncoding: 'json' })
 var file = path.join(require('os').tmpdir(), 'kdb-tree-' + Math.random())
 
 test('points', function (t) {
-  t.plan(2)
+  var N = 50
+  t.plan(2 + N)
   var kdb = hyperkdb({
     log: log,
     db: memdb(),
     types: [ 'float', 'float' ],
     kdbtree: kdbtree,
-    store: fdstore(64, file),
-    size: 64,
+    store: fdstore(256, file),
+    size: 256,
     map: function (row) {
       if (row.value.type === 'point') {
         return [ row.value.lat, row.value.lon ]
@@ -25,7 +26,7 @@ test('points', function (t) {
     }
   })
   var data = []
-  for (var i = 0; i < 50; i++) (function (i) {
+  for (var i = 0; i < N; i++) (function (i) {
     var row = {
       type: 'point',
       lat: 64 + Math.random() * 2,
@@ -35,7 +36,7 @@ test('points', function (t) {
       t.ifError(err)
       data[i] = {
         point: [ row.lat, row.lon ],
-        value: node.key
+        value: Buffer(node.key, 'hex')
       }
     })
   })(i)
@@ -44,9 +45,22 @@ test('points', function (t) {
   kdb.query(q, function (err, pts) {
     t.ifError(err)
     var expected = data.filter(function (row) {
-      return q[0][0] <= row.lat && row.lat <= q[0][1]
-        && q[1][0] <= row.lon && row.lon <= q[1][1]
-    })
+      return q[0][0] <= row.point[0] && row.point[0] <= q[0][1]
+        && q[1][0] <= row.point[1] && row.point[1] <= q[1][1]
+    }).map(round)
     t.deepEqual(pts, expected, 'expected points')
   })
 })
+
+function round (row) {
+  return {
+    point: row.point.map(roundf),
+    value: row.value
+  }
+}
+
+function roundf (x) {
+  var buf = new Buffer(4)
+  buf.writeFloatBE(x, 0)
+  return buf.readFloatBE(0)
+}
