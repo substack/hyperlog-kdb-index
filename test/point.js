@@ -25,22 +25,28 @@ test('points', function (t) {
     }
   })
   var data = []
-  for (var i = 0; i < 5; i++) {
+  for (var i = 0; i < 50; i++) (function (i) {
     var row = {
       type: 'point',
       lat: 64 + Math.random() * 2,
       lon: -147 - Math.random() * 2
     }
-    log.append(row)
-    data.push([ row.lat, row.lon ])
-  }
+    log.append(row, function (err, node) {
+      t.ifError(err)
+      data[i] = {
+        point: [ row.lat, row.lon ],
+        value: node.key
+      }
+    })
+  })(i)
+
   var q = [[64.5,65],[-147.9,-147.2]]
-  var expected = data.map(function (row) {
-    return q[0][0] <= row.lat && row.lat <= q[0][1]
-      && q[1][0] <= row.lon && row.lon <= q[1][1]
-  })
   kdb.query(q, function (err, pts) {
     t.ifError(err)
+    var expected = data.filter(function (row) {
+      return q[0][0] <= row.lat && row.lat <= q[0][1]
+        && q[1][0] <= row.lon && row.lon <= q[1][1]
+    })
     t.deepEqual(pts, expected, 'expected points')
   })
 })
