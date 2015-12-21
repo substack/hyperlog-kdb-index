@@ -47,8 +47,8 @@ test('points', function (t) {
     var expected = data.filter(function (row) {
       return q[0][0] <= row.point[0] && row.point[0] <= q[0][1]
         && q[1][0] <= row.point[1] && row.point[1] <= q[1][1]
-    }).map(round)
-    t.deepEqual(pts, expected, 'expected points')
+    }).map(round).sort(cmp)
+    t.deepEqual(pts.sort(cmp), expected, 'expected points')
   })
 })
 
@@ -63,4 +63,8 @@ function roundf (x) {
   var buf = new Buffer(4)
   buf.writeFloatBE(x, 0)
   return buf.readFloatBE(0)
+}
+
+function cmp (a, b) {
+  return a.point.join(',') < b.point.join(',') ? -1 : 1
 }
