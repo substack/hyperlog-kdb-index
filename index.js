@@ -2,8 +2,6 @@ var indexer = require('hyperlog-index')
 var inherits = require('inherits')
 var EventEmitter = require('events').EventEmitter
 var sub = require('subleveldown')
-var once = require('once')
-var randomBytes = require('randombytes')
 
 module.exports = HKDB
 inherits(HKDB, EventEmitter)
@@ -14,9 +12,14 @@ function HKDB (opts) {
   EventEmitter.call(self)
   self.log = opts.log
   self.db = opts.db
-  self.kdb = opts.kdb
-
-  self.dex = indexer(self.log, self.db, function (row, next) {
+  self.idb = sub(self.db, 'i')
+  self.xdb = sub(self.db, 'x')
+  self.kdb = opts.kdbtree({
+    types: opts.types.concat('buffer[32]'),
+    store: opts.store,
+    size: opts.size || opts.store.size
+  })
+  self.dex = indexer(self.log, self.idb, function (row, next) {
     var pt = opts.map(row)
     if (!pt) return next()
     var value = Buffer(row.key, 'hex')
@@ -37,6 +40,23 @@ function HKDB (opts) {
 
 HKDB.prototype.ready = function (fn) {
   this.dex.ready(fn)
+}
+
+HKDB.prototype.query = function (q, opts, cb) {
+  var self = this
+  self.ready(function () {
+    self.kdb.query(q, opts, cb)
+  })
+}
+
+HKDB.prototype.queryStream = function (q, opts) {
+  var r = through.obj()
+  self.ready(function () {
+    var qs = self.kdb.queryStream(q, opts)
+    qs.on('error', r.emit.bind(r, 'error'))
+    qs.pipe(r)
+  })
+  return readonly(r)
 }
 
 function noop () {}
