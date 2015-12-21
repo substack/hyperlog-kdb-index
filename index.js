@@ -14,11 +14,25 @@ function HKDB (opts) {
   self.db = opts.db
   self.idb = sub(self.db, 'i')
   self.xdb = sub(self.db, 'x')
-  self.kdb = opts.kdbtree({
-    types: opts.types.concat('buffer[32]'),
-    store: opts.store,
-    size: opts.size || opts.store.size
+
+  self.xdb.get('available', function (err, value) {
+    if (err && !/^notfound/i.test(err.message) && !err.notFound) {
+      return self.emit('error', err)
+    }
+    self.kdb = opts.kdbtree({
+      types: opts.types.concat('buffer[32]'),
+      store: opts.store,
+      size: opts.size || opts.store.size,
+      available: Number(value || 0)
+    })
+    self.kdb.on('available', function (n) {
+      self.xdb.put('available', String(n), function (err) {
+        if (err) self.emit('error', err)
+      })
+    })
+    self.emit('_kdb', self.kdb)
   })
+
   self.dex = indexer(self.log, self.idb, function (row, next) {
     var pt = opts.map(row)
     if (!pt) return next()
@@ -26,16 +40,23 @@ function HKDB (opts) {
     var links = {}
     row.links.forEach(function (link) { links[link] = true })
 
-    self.kdb.remove(pt, {
-      filter: function (pt) {
-        return links.hasOwnProperty(pt.value.toString('hex'))
+    self._getkdb(function (kdb) {
+      kdb.remove(pt, {
+        filter: function (pt) {
+          return links.hasOwnProperty(pt.value.toString('hex'))
+        }
+      }, onremove)
+      function onremove (err) {
+        if (err) next(err)
+        else kdb.insert(pt, value, next)
       }
-    }, onremove)
-    function onremove (err) {
-      if (err) next(err)
-      else self.kdb.insert(pt, value, next)
-    }
+    })
   })
+}
+
+HKDB.prototype._getkdb = function (fn) {
+  if (this.kdb) fn(this.kdb)
+  else this.once('_kdb', fn)
 }
 
 HKDB.prototype.ready = function (fn) {
