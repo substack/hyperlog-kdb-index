@@ -73,6 +73,7 @@ HKDB.prototype.query = function (q, opts, cb) {
 }
 
 HKDB.prototype.queryStream = function (q, opts) {
+  var self = this
   var r = through.obj()
   self.ready(function () {
     var qs = self.kdb.queryStream(q, opts)
