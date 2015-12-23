@@ -2,6 +2,8 @@ var indexer = require('hyperlog-index')
 var inherits = require('inherits')
 var EventEmitter = require('events').EventEmitter
 var sub = require('subleveldown')
+var through = require('through2')
+var readonly = require('read-only-stream')
 
 module.exports = HKDB
 inherits(HKDB, EventEmitter)
