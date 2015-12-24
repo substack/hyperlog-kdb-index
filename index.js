@@ -35,23 +35,33 @@ function HKDB (opts) {
     self.emit('_kdb', self.kdb)
   })
 
+  self.map = opts.map
   self.dex = indexer(self.log, self.idb, function (row, next) {
-    var pt = opts.map(row)
+    var pt = self.map(row)
     if (!pt) return next()
     var value = Buffer(row.key, 'hex')
     var links = {}
     row.links.forEach(function (link) { links[link] = true })
 
     self._getkdb(function (kdb) {
-      kdb.remove(pt, {
-        filter: function (pt) {
-          return links.hasOwnProperty(pt.value.toString('hex'))
-        }
-      }, onremove)
-      function onremove (err) {
-        if (err) next(err)
-        else kdb.insert(pt, value, next)
-      }
+      var pending = 1
+      row.links.forEach(function (link) {
+        pending++
+        self.log.get(link, function (err, doc) {
+          if (err) return next(err)
+          var pt = self.map(doc)
+          if (!pt) {
+            if (--pending === 0) insert()
+            return
+          }
+          kdb.remove(pt, { value: Buffer(link, 'hex') }, function (err) {
+            if (err) next(err)
+            else if (--pending === 0) insert()
+          })
+        })
+      })
+      if (--pending === 0) insert()
+      function insert () { kdb.insert(pt, value, next) }
     })
   })
 }
