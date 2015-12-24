@@ -94,6 +94,17 @@ passed through to the underlying [kdb-tree-store][1] query method.
 When the index has caught up with the latest known entry in the hyperlog, `fn()`
 fires.
 
+## log.add(links, doc, cb)
+
+When you write to the hyperlog, the `links` should refer to the ancestors of the
+current `doc` which will be replaced with the new value.
+
+When you create a new point, `links` should be any empty array `[]`.
+
+When you update an existing point, `links` should contain a list of immediate
+ancestors that the update will replace. Usually this will be a single key, but
+for merge cases, this can be several keys.
+
 # install
 
 ```
