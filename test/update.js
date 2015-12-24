@@ -63,7 +63,8 @@ test('update', function (t) {
         })
         t.deepEqual(ps.sort(cmp), [
           { type: 'point', lat: 65.3, lon: -143 },
-          { type: 'point', lat: 64, lon: -148 }
+          { type: 'point', lat: 64, lon: -148 },
+          { type: 'point', lat: 64, lon: -147 }
         ].sort(cmp))
       })
     })
