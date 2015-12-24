@@ -27,7 +27,7 @@ var kdb = hyperkdb({
 })
 
 if (process.argv[2] === 'add') {
-  log.append({
+  log.add(null, {
     type: 'point',
     lat: Number(process.argv[3]),
     lon: Number(process.argv[4])
@@ -50,7 +50,7 @@ $ mkdir /tmp/kdb-log
 $ node log.js add 64.7 -147.9
 $ node log.js add 66.2 -147.5
 $ node log.js add 61.6 -148.3
-$ node example/log.js query 60,65 -149,-146
+$ node log.js query 60,65 -149,-146
 [ 64.69999694824219, -147.89999389648438 ]
 [ 61.599998474121094, -148.3000030517578 ]
 ```

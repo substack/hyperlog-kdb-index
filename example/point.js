@@ -20,7 +20,7 @@ var kdb = hyperkdb({
 })
 
 for (var i = 0; i < 50; i++) {
-  log.append({
+  log.add(null, {
     type: 'point',
     lat: 64 + Math.random() * 2,
     lon: -147 - Math.random() * 2

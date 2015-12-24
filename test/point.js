@@ -32,7 +32,7 @@ test('points', function (t) {
       lat: 64 + Math.random() * 2,
       lon: -147 - Math.random() * 2
     }
-    log.append(row, function (err, node) {
+    log.add(null, row, function (err, node) {
       t.ifError(err)
       data[i] = {
         point: [ row.lat, row.lon ],

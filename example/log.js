@@ -20,7 +20,7 @@ var kdb = hyperkdb({
 })
 
 if (process.argv[2] === 'add') {
-  log.append({
+  log.add(null, {
     type: 'point',
     lat: Number(process.argv[3]),
     lon: Number(process.argv[4])
