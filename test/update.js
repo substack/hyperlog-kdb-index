@@ -11,7 +11,7 @@ var log = hyperlog(memdb(), { valueEncoding: 'json' })
 var file = path.join(require('os').tmpdir(), 'kdb-tree-' + Math.random())
 
 test('update', function (t) {
-  t.plan(6)
+  t.plan(8)
   var kdb = hyperkdb({
     log: log,
     db: memdb(),
@@ -43,9 +43,9 @@ test('update', function (t) {
   })
   function ready () {
     var doc = xtend(nodes[2].value, { lat: 65.3, lon: -143 })
-    log.add([nodes[2].key], doc, function (err) {
-      var q = [[63.5,65.1],[-150,-147.5]]
-      kdb.query(q, function (err, pts) {
+    log.add([nodes[2].key], doc, function (err, node) {
+      var q0 = [[63.5,65.1],[-150,-147.5]]
+      kdb.query(q0, function (err, pts) {
         t.ifError(err)
         var ps = pts.map(function (pt) {
           return knodes[pt.value.toString('hex')].value
@@ -54,23 +54,22 @@ test('update', function (t) {
           { type: 'point', lat: 64, lon: -148 }
         ])
       })
+      var q1 = [[63.5,65.4],[-150,-142]]
+      kdb.query(q1, function (err, pts) {
+        t.ifError(err)
+        var ps = pts.map(function (pt) {
+          if (node.key === pt.value.toString('hex')) return node.value
+          return knodes[pt.value.toString('hex')].value
+        })
+        t.deepEqual(ps.sort(cmp), [
+          { type: 'point', lat: 65.3, lon: -143 },
+          { type: 'point', lat: 64, lon: -148 }
+        ].sort(cmp))
+      })
     })
   }
 })
 
-function round (row) {
-  return {
-    point: row.point.map(roundf),
-    value: row.value
-  }
-}
-
-function roundf (x) {
-  var buf = new Buffer(4)
-  buf.writeFloatBE(x, 0)
-  return buf.readFloatBE(0)
-}
-
 function cmp (a, b) {
-  return a.point.join(',') < b.point.join(',') ? -1 : 1
+  return a.lat + ',' + a.lon < b.lat + ',' + b.lon ? -1 : 1
 }
