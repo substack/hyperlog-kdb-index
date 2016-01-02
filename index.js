@@ -37,8 +37,10 @@ function HKDB (opts) {
 
   self.map = opts.map
   self.dex = indexer(self.log, self.idb, function (row, next) {
-    var pt = self.map(row)
-    if (!pt) return next()
+    var rec = self.map(row)
+    if (Array.isArray(rec)) rec = { type: 'put', point: rec }
+    if (!rec || !rec.point) return next()
+    if (!rec.type) rec.type = 'put'
     var value = Buffer(row.key, 'hex')
     var links = {}
     row.links.forEach(function (link) { links[link] = true })
@@ -49,19 +51,26 @@ function HKDB (opts) {
         pending++
         self.log.get(link, function (err, doc) {
           if (err) return next(err)
-          var pt = self.map(doc)
-          if (!pt) {
+          var rec = self.map(doc)
+          if (Array.isArray(rec)) rec = { type: 'put', point: rec }
+          if (!rec || !rec.point) {
             if (--pending === 0) insert()
             return
           }
-          kdb.remove(pt, { value: Buffer(link, 'hex') }, function (err) {
+          kdb.remove(rec.point, { value: Buffer(link, 'hex') }, function (err) {
             if (err) next(err)
             else if (--pending === 0) insert()
           })
         })
       })
       if (--pending === 0) insert()
-      function insert () { kdb.insert(pt, value, next) }
+      function insert () {
+        if (rec.type === 'put') {
+          kdb.insert(rec.point, value, next)
+        } else { // del, unknown type cases
+          next()
+        }
+      }
     })
   })
 }
