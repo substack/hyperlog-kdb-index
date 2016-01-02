@@ -74,7 +74,12 @@ Create a kdb-tree spatial index for a hyperlog. These options are required:
 * `opts.map(row)` - function mapping hyperlog rows to points
 
 In the `opts.map(row)`, if there are no points to map in a given row, return a
-falsy value. Otherwise return a point array.
+falsy value. Otherwise return a map record `rec`:
+
+* `rec.type` - `'put'` or `'del'`
+* `rec.point` - array of coordinates
+
+If `rec` is an array, it will be interpreted as a point in a `'put'`.
 
 [1]: https://npmjs.com/package/kdb-tree-store
 [2]: https://npmjs.com/package/abstract-chunk-store
