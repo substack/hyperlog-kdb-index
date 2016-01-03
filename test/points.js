@@ -10,7 +10,7 @@ var hyperlog = require('hyperlog')
 var log = hyperlog(memdb(), { valueEncoding: 'json' })
 var file = path.join(require('os').tmpdir(), 'kdb-tree-' + Math.random())
 
-test('del points', function (t) {
+test('points', function (t) {
   t.plan(9)
   var kdb = hyperkdb({
     log: log,
@@ -35,8 +35,7 @@ test('del points', function (t) {
     A: { v: { type: 'point', lat: 64, lon: -147 } },
     B: { v: { type: 'point', lat: 63, lon: -145 } },
     C: { v: { type: 'point', lat: 65, lon: -149 } },
-    D: { v: { type: 'way', points: [ 'A', 'B', 'C' ] } },
-    E: { v: { type: 'remove', points: [ 'A', 'B', 'C' ] }, links: ['D'] }
+    D: { v: { type: 'way', points: [ 'A', 'B', 'C' ] } }
   }
   var keys = Object.keys(docs).sort()
   var nodes = {}, knodes = {}
@@ -60,7 +59,8 @@ test('del points', function (t) {
     kdb.query(q0, function (err, pts) {
       t.ifError(err)
       t.deepEqual(pts.sort(cmp), [
-        { point: [ 65, -149 ], value: Buffer(nodes.C.key, 'hex') }
+        { point: [ 65, -149 ], value: Buffer(nodes.C.key, 'hex') },
+        { point: [ 65, -149 ], value: Buffer(nodes.D.key, 'hex') }
       ].sort(cmp))
     })
     var q1 = [[63.5,65.4],[-150,-142]]
@@ -68,7 +68,8 @@ test('del points', function (t) {
       t.ifError(err)
       t.deepEqual(pts.sort(cmp), [
         { point: [ 65, -149 ], value: Buffer(nodes.C.key, 'hex') },
-        { point: [ 64, -147 ], value: Buffer(nodes.A.key, 'hex') }
+        { point: [ 64, -147 ], value: Buffer(nodes.A.key, 'hex') },
+        { point: [ 65, -149 ], value: Buffer(nodes.D.key, 'hex') }
       ].sort(cmp))
     })
   }
