@@ -69,7 +69,17 @@ function HKDB (opts) {
       })
       if (--pending === 0) insert()
       function insert () {
-        if (rec.type === 'put') {
+        if (rec.type === 'put' && rec.points) {
+          var p = 1 + rec.points.length
+          rec.points.forEach(function (p) {
+            kdb.insert(p, value, oninsert)
+          })
+          function oninsert (err) {
+            if (err) next(err)
+            else if (--p === 0) next()
+          }
+          if (--p === 0) next()
+        } else if (rec.type === 'put') {
           kdb.insert(rec.point, value, next)
         } else { // del, unknown type cases
           next()

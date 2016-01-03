@@ -11,7 +11,7 @@ var log = hyperlog(memdb(), { valueEncoding: 'json' })
 var file = path.join(require('os').tmpdir(), 'kdb-tree-' + Math.random())
 
 test('points', function (t) {
-  t.plan(9)
+  t.plan(8)
   var kdb = hyperkdb({
     log: log,
     db: memdb(),
@@ -44,7 +44,7 @@ test('points', function (t) {
     var key = keys.shift()
     var doc = docs[key]
     var ln = (doc.links || []).map(function (k) { return nodes[k].key })
-    if (doc.points) doc.points = doc.points.map(function (p) {
+    if (doc.v.points) doc.v.points = doc.v.points.map(function (p) {
       return [docs[p].v.lat,docs[p].v.lon]
     })
     log.add(ln, doc.v, function (err, node) {
@@ -68,11 +68,16 @@ test('points', function (t) {
       t.ifError(err)
       t.deepEqual(pts.sort(cmp), [
         { point: [ 65, -149 ], value: Buffer(nodes.C.key, 'hex') },
+        { point: [ 65, -149 ], value: Buffer(nodes.D.key, 'hex') },
         { point: [ 64, -147 ], value: Buffer(nodes.A.key, 'hex') },
-        { point: [ 65, -149 ], value: Buffer(nodes.D.key, 'hex') }
+        { point: [ 64, -147 ], value: Buffer(nodes.D.key, 'hex') }
       ].sort(cmp))
     })
   }
 })
 
-function cmp (a, b) { return Buffer.compare(a.value, b.value) }
+function cmp (a, b) {
+  var n = Buffer.compare(a.value, b.value)
+  if (n !== 0) return n
+  return a.point.join(',') < b.point.join(',') ? -1 : 1
+}

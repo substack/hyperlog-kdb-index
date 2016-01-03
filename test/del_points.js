@@ -45,7 +45,7 @@ test('del points', function (t) {
     var key = keys.shift()
     var doc = docs[key]
     var ln = (doc.links || []).map(function (k) { return nodes[k].key })
-    if (doc.points) doc.points = doc.points.map(function (p) {
+    if (doc.v.points) doc.v.points = doc.v.points.map(function (p) {
       return [docs[p].v.lat,docs[p].v.lon]
     })
     log.add(ln, doc.v, function (err, node) {
