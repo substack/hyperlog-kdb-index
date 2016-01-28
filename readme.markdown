@@ -18,7 +18,6 @@ var kdb = hyperkdb({
   types: [ 'float', 'float' ],
   kdbtree: require('kdb-tree-store'),
   store: fdstore(1024, '/tmp/kdb-log/tree'),
-  size: 1024,
   map: function (row) {
     if (row.value.type === 'point') {
       return [ row.value.lat, row.value.lon ]
@@ -70,7 +69,6 @@ Create a kdb-tree spatial index for a hyperlog. These options are required:
 * `opts.types` - array of [kdb-tree-store][1] types
 * `opts.kdbtree` - kdb-tree-store interface (`require('kdb-tree-store')`)
 * `opts.store` - [abstract-chunk-store][2] for the kdb tree data
-* `opts.size` - chunk size for the chunks
 * `opts.map(row)` - function mapping hyperlog rows to points
 
 In the `opts.map(row)`, if there are no points to map in a given row, return a

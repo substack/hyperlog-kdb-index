@@ -11,7 +11,6 @@ var kdb = hyperkdb({
   types: [ 'float', 'float' ],
   kdbtree: require('kdb-tree-store'),
   store: fdstore(1024, '/tmp/kdb-log/tree'),
-  size: 1024,
   map: function (row) {
     if (row.value.type === 'point') {
       return [ row.value.lat, row.value.lon ]
