@@ -1,6 +1,6 @@
 {
   "name": "hyperlog-kdb-index",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "n-dimensional kdb tree spatial index for hyperlogs",
   "main": "index.js",
   "scripts": {
