@@ -18,7 +18,6 @@ test('del', function (t) {
     types: [ 'float', 'float' ],
     kdbtree: kdbtree,
     store: fdstore(256, file),
-    size: 256,
     map: function (row) {
       if (row.value.type === 'remove') {
         return { type: 'del', point: [ row.value.lat, row.value.lon ] }

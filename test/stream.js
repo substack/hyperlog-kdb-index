@@ -19,7 +19,6 @@ test('point stream', function (t) {
     types: [ 'float', 'float' ],
     kdbtree: kdbtree,
     store: fdstore(256, file),
-    size: 256,
     map: function (row) {
       if (row.value.type === 'point') {
         return [ row.value.lat, row.value.lon ]

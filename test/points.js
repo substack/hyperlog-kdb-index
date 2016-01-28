@@ -18,7 +18,6 @@ test('points', function (t) {
     types: [ 'float', 'float' ],
     kdbtree: kdbtree,
     store: fdstore(256, file),
-    size: 256,
     map: function (row) {
       if (row.value.type === 'remove' && row.value.points) {
         return { type: 'del', points: row.value.points }

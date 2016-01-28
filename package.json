@@ -17,6 +17,7 @@
   "author": "substack",
   "license": "BSD",
   "dependencies": {
+    "fd-chunk-store": "^2.0.0",
     "hyperlog-index": "^4.0.0",
     "inherits": "^2.0.1",
     "read-only-stream": "^2.0.0",

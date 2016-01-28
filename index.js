@@ -24,7 +24,7 @@ function HKDB (opts) {
     self.kdb = opts.kdbtree({
       types: opts.types.concat('buffer[32]'),
       store: opts.store,
-      size: opts.size || opts.store.size,
+      size: opts.chunkLength || opts.store.chunkLength,
       available: Number(value || 0)
     })
     self.kdb.on('available', function (n) {
