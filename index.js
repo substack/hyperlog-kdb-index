@@ -36,7 +36,13 @@ function HKDB (opts) {
   })
 
   self.map = opts.map
-  self.dex = indexer(self.log, self.idb, function (row, next) {
+  self.dex = indexer({
+    log: self.log,
+    db: self.idb,
+    map: mapfn
+  })
+
+  function mapfn (row, next) {
     var rec = self.map(row)
     if (Array.isArray(rec)) rec = { type: 'put', point: rec }
     if (!rec || (!rec.point && !Array.isArray(rec.points))) return next()
@@ -90,7 +96,7 @@ function HKDB (opts) {
         else if (--pending === 0) insert()
       }
     })
-  })
+  }
 }
 
 HKDB.prototype._getkdb = function (fn) {
