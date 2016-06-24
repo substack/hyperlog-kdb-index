@@ -76,10 +76,11 @@ function HKDB (opts) {
           if (rec.point) {
             kdb.remove(rec.point, { value: Buffer(link, 'hex') }, onrm)
           } else if (rec.points) {
-            pending += rec.points.length - 1
+            pending += rec.points.length
             rec.points.forEach(function (pt) {
               kdb.remove(pt, { value: Buffer(link, 'hex') }, onrm)
             })
+            if (--pending === 0) insert()
           }
         })
       })
