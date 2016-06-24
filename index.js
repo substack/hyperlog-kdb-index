@@ -4,6 +4,7 @@ var EventEmitter = require('events').EventEmitter
 var sub = require('subleveldown')
 var through = require('through2')
 var readonly = require('read-only-stream')
+var once = require('once')
 
 module.exports = HKDB
 inherits(HKDB, EventEmitter)
@@ -43,21 +44,30 @@ function HKDB (opts) {
   })
 
   function mapfn (row, next) {
-    var rec = self.map(row)
-    if (Array.isArray(rec)) rec = { type: 'put', point: rec }
-    if (!rec || (!rec.point && !Array.isArray(rec.points))) return next()
-    if (!rec.type) rec.type = 'put'
+    next = once(next)
+    self.map(row, function (err, rec) {
+      if (err) return next(err)
+      if (Array.isArray(rec)) rec = { type: 'put', point: rec }
+      if (!rec || (!rec.point && !Array.isArray(rec.points))) return next()
+      if (!rec.type) rec.type = 'put'
+      self._getkdb(function (kdb) {
+        onkdb(kdb, row, rec, next)
+      })
+    })
+  }
+
+  function onkdb (kdb, row, rec, next) {
     var value = Buffer(row.key, 'hex')
     var links = {}
     row.links.forEach(function (link) { links[link] = true })
+    var pending = 1
 
-    self._getkdb(function (kdb) {
-      var pending = 1
-      row.links.forEach(function (link) {
-        pending++
-        self.log.get(link, function (err, doc) {
+    row.links.forEach(function (link) {
+      pending++
+      self.log.get(link, function (err, doc) {
+        if (err) return next(err)
+        self.map(doc, function (err, rec) {
           if (err) return next(err)
-          var rec = self.map(doc)
           if (Array.isArray(rec)) rec = { type: 'put', point: rec }
           if (!rec || (!rec.point && !Array.isArray(rec.points))) {
             if (--pending === 0) insert()
@@ -73,29 +83,29 @@ function HKDB (opts) {
           }
         })
       })
-      if (--pending === 0) insert()
-      function insert () {
-        if (rec.type === 'put' && rec.points) {
-          var p = 1 + rec.points.length
-          rec.points.forEach(function (p) {
-            kdb.insert(p, value, oninsert)
-          })
-          function oninsert (err) {
-            if (err) next(err)
-            else if (--p === 0) next()
-          }
-          if (--p === 0) next()
-        } else if (rec.type === 'put') {
-          kdb.insert(rec.point, value, next)
-        } else { // del, unknown type cases
-          next()
-        }
-      }
-      function onrm (err) {
-        if (err) next(err)
-        else if (--pending === 0) insert()
-      }
     })
+    if (--pending === 0) insert()
+    function insert () {
+      if (rec.type === 'put' && rec.points) {
+        var p = 1 + rec.points.length
+        rec.points.forEach(function (p) {
+          kdb.insert(p, value, oninsert)
+        })
+        function oninsert (err) {
+          if (err) next(err)
+          else if (--p === 0) next()
+        }
+        if (--p === 0) next()
+      } else if (rec.type === 'put') {
+        kdb.insert(rec.point, value, next)
+      } else { // del, unknown type cases
+        next()
+      }
+    }
+    function onrm (err) {
+      if (err) next(err)
+      else if (--pending === 0) insert()
+    }
   }
 }
 
