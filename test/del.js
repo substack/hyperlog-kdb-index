@@ -18,11 +18,11 @@ test('del', function (t) {
     types: [ 'float', 'float' ],
     kdbtree: kdbtree,
     store: fdstore(256, file),
-    map: function (row) {
+    map: function (row, next) {
       if (row.value.type === 'remove') {
-        return { type: 'del', point: [ row.value.lat, row.value.lon ] }
+        next(null, { type: 'del', point: [ row.value.lat, row.value.lon ] })
       } else if (row.value.type === 'point') {
-        return { type: 'put', point: [ row.value.lat, row.value.lon ] }
+        next(null, { type: 'put', point: [ row.value.lat, row.value.lon ] })
       }
     }
   })

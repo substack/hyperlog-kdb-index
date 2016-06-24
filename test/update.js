@@ -18,9 +18,9 @@ test('update', function (t) {
     types: [ 'float', 'float' ],
     kdbtree: kdbtree,
     store: fdstore(256, file),
-    map: function (row) {
+    map: function (row, next) {
       if (row.value.type === 'point') {
-        return [ row.value.lat, row.value.lon ]
+        next(null, [ row.value.lat, row.value.lon ])
       }
     }
   })
