@@ -44,10 +44,10 @@ function createKDB (log) {
     types: [ 'float', 'float' ],
     kdbtree: require('kdb-tree-store'),
     store: fdstore(1024, '/tmp/kdb-tree-' + Math.random()),
-    map: function (row) {
+    map: function (row, next) {
       if (row.value.type === 'point') {
-        return [ row.value.lat, row.value.lon ]
-      }
+        next(null, [ row.value.lat, row.value.lon ])
+      } else next()
     }
   })
 }
