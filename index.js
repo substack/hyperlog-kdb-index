@@ -42,6 +42,7 @@ function HKDB (opts) {
     db: self.idb,
     map: mapfn
   })
+  self.dex.on('error', function (err) { self.emit('error', err) })
 
   function mapfn (row, next) {
     next = once(next)
